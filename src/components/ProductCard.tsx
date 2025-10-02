@@ -1,15 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import productImage from "@/assets/product-headphones.jpg";
 import smartwatchImage from "@/assets/product-smartwatch.jpg";
 import type { Product } from "@/hooks/useProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+declare global {
+  interface Window {
+    WompiCheckout: any;
+  }
+}
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const { toast } = useToast();
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+  
   const features = [
     "Cancelación de ruido activa",
     "40 horas de batería",
@@ -18,9 +30,46 @@ const ProductCard = ({ product }: ProductCardProps) => {
     "Plegable y portátil"
   ];
 
-  const handleCheckout = () => {
-    // Aquí iría la lógica de pago
-    console.log("Procesando pago...", product);
+  const handleCheckout = async () => {
+    setIsProcessingPayment(true);
+    
+    toast({
+      title: "Iniciando pasarela de pago...",
+      description: "Por favor espera.",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-payment-link', {
+        body: { productReference: product.reference }
+      });
+
+      if (error) throw error;
+
+      const { reference, amountInCents, signature, publicKey } = data;
+
+      const checkout = new window.WompiCheckout({
+        currency: 'COP',
+        amountInCents: amountInCents,
+        reference: reference,
+        publicKey: publicKey,
+        signature: {
+          integrity: signature,
+        },
+        redirectUrl: `${window.location.origin}/transaction-result`,
+      });
+
+      checkout.open((result: any) => {
+        console.log('Resultado del checkout:', result);
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al procesar el pago",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   // Seleccionar imagen según el producto
@@ -75,10 +124,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
             <Button 
               onClick={handleCheckout}
+              disabled={isProcessingPayment}
               size="lg"
               className="w-full bg-foreground hover:bg-primary text-background font-semibold py-6 text-lg shadow-lg hover:shadow-[var(--shadow-glow)] hover:scale-[1.02] transition-all duration-300"
             >
-              Comprar Ahora
+              {isProcessingPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                "Comprar Ahora"
+              )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">

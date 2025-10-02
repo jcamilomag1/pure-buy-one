@@ -1,25 +1,26 @@
 import Header from "@/components/Header";
 import ProductCardPreview from "@/components/ProductCardPreview";
+import { useProducts } from "@/hooks/useProducts";
 import headphonesImage from "@/assets/product-headphones.jpg";
 import smartwatchImage from "@/assets/product-smartwatch.jpg";
 
 const Index = () => {
-  const products = [
-    {
-      id: 1,
-      title: "Auriculares Premium",
-      description: "Sumérgete en un sonido cristalino con cancelación de ruido activa y hasta 30 horas de batería.",
-      price: "$299",
-      image: headphonesImage,
-    },
-    {
-      id: 2,
-      title: "Smartwatch Premium",
-      description: "Tecnología avanzada en tu muñeca con pantalla AMOLED y seguimiento completo de salud.",
-      price: "$399",
-      image: smartwatchImage,
-    },
-  ];
+  const { data: products, isLoading, error } = useProducts();
+
+  const productImages: { [key: string]: string } = {
+    "AUR-001": headphonesImage,
+    "SMW-001": smartwatchImage,
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive">Error al cargar productos</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,11 +36,21 @@ const Index = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {products.map((product) => (
-            <ProductCardPreview key={product.id} {...product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center text-muted-foreground">
+            Cargando productos...
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {products?.map((product) => (
+              <ProductCardPreview 
+                key={product.id} 
+                product={product}
+                image={productImages[product.reference] || headphonesImage}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

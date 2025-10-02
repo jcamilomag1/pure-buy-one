@@ -5,21 +5,15 @@ import productImage from "@/assets/product-headphones.jpg";
 import smartwatchImage from "@/assets/product-smartwatch.jpg";
 import type { Product } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useState } from "react";
 
-declare global {
-  interface Window {
-    WompiCheckout: any;
-  }
-}
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const { toast } = useToast();
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   
   const features = [
@@ -32,42 +26,43 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handleCheckout = async () => {
     setIsProcessingPayment(true);
-    
-    toast({
-      title: "Iniciando pasarela de pago...",
-      description: "Por favor espera.",
-    });
+    toast.loading("Iniciando pasarela de pago...", { id: "payment-toast" });
 
     try {
+      // 1. Llamar a la Edge Function para obtener los datos de la transacción
       const { data, error } = await supabase.functions.invoke('generate-payment-link', {
-        body: { productReference: product.reference }
+        body: { productReference: product.reference },
       });
 
       if (error) throw error;
 
-      const { reference, amountInCents, signature, publicKey } = data;
-
+      // 2. Crear y abrir el widget de Wompi
       const checkout = new window.WompiCheckout({
         currency: 'COP',
-        amountInCents: amountInCents,
-        reference: reference,
-        publicKey: publicKey,
+        amountInCents: data.amountInCents,
+        reference: data.reference,
+        publicKey: data.publicKey,
         signature: {
-          integrity: signature,
+          integrity: data.signature,
         },
         redirectUrl: `${window.location.origin}/transaction-result`,
       });
 
+      toast.dismiss("payment-toast");
+
       checkout.open((result: any) => {
+        // Este callback se ejecuta cuando el usuario cierra el widget o completa el pago.
+        // La verificación final se hace vía webhook, esto es solo para feedback inmediato.
         console.log('Resultado del checkout:', result);
+        setIsProcessingPayment(false);
       });
+
     } catch (error: any) {
-      toast({
-        title: "Error al procesar el pago",
+      console.error('Error al iniciar el pago:', error);
+      toast.error("Error al procesar el pago", {
+        id: "payment-toast",
         description: error.message,
-        variant: "destructive",
       });
-    } finally {
       setIsProcessingPayment(false);
     }
   };

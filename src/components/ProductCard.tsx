@@ -24,6 +24,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     "Plegable y portátil"
   ];
 
+  const getWompiCheckoutCtor = () => 
+    window.WidgetCheckout || window.WompiCheckout;
+
   const handleCheckout = async () => {
     setIsProcessingPayment(true);
     toast.loading("Iniciando pasarela de pago...", { id: "payment-toast" });
@@ -36,8 +39,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       if (error) throw error;
 
-      // 2. Crear y abrir el widget de Wompi
-      const checkout = new window.WompiCheckout({
+      // 2. Verificar que el constructor de Wompi esté disponible
+      const CheckoutCtor = getWompiCheckoutCtor();
+      if (!CheckoutCtor) {
+        toast.error("No se pudo cargar el widget de pagos de Wompi. Intenta nuevamente en unos segundos.", {
+          id: "payment-toast",
+        });
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      // 3. Crear y abrir el widget de Wompi
+      const checkout = new CheckoutCtor({
         currency: 'COP',
         amountInCents: data.amountInCents,
         reference: data.reference,

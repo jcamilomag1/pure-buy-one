@@ -2,3 +2,6 @@ project_id = "vlgvjvbquqzsusnsmjlk"
 
 [functions.wompi-webhook]
 verify_jwt = false
+
+[functions.generate-payment-link]
+verify_jwt = false

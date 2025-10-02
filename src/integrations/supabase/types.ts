@@ -996,6 +996,33 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          price: number
+          reference: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          reference: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          reference?: string
+        }
+        Relationships: []
+      }
       propiedades: {
         Row: {
           descripcion: string | null
@@ -1874,6 +1901,53 @@ export type Database = {
             columns: ["empleado_id"]
             isOneToOne: false
             referencedRelation: "te_facilitamos_empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount_in_cents: number
+          created_at: string | null
+          currency: string
+          id: string
+          product_id: string | null
+          reference: string
+          signature: string | null
+          status: string
+          updated_at: string | null
+          wompi_id: string | null
+        }
+        Insert: {
+          amount_in_cents: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          product_id?: string | null
+          reference: string
+          signature?: string | null
+          status?: string
+          updated_at?: string | null
+          wompi_id?: string | null
+        }
+        Update: {
+          amount_in_cents?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          product_id?: string | null
+          reference?: string
+          signature?: string | null
+          status?: string
+          updated_at?: string | null
+          wompi_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

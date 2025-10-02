@@ -65,7 +65,7 @@ const ProductCard = () => {
             <Button 
               onClick={handleCheckout}
               size="lg"
-              className="w-full bg-[var(--gradient-primary)] hover:opacity-90 text-primary-foreground font-semibold py-6 text-lg shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.02] transition-all duration-300"
+              className="w-full bg-foreground hover:bg-primary text-background font-semibold py-6 text-lg shadow-lg hover:shadow-[var(--shadow-glow)] hover:scale-[1.02] transition-all duration-300"
             >
               Comprar Ahora
             </Button>

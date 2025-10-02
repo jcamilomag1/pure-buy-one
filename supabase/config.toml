@@ -1,1 +1,4 @@
 project_id = "vlgvjvbquqzsusnsmjlk"
+
+[functions.wompi-webhook]
+verify_jwt = false
